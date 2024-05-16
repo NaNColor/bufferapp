@@ -4,6 +4,17 @@ echo "archive_command = 'cp %p /oracle/pg_data/archive/%f'" >> /etc/postgresql/1
 echo "max_wal_senders = 10" >> /etc/postgresql/15/main/postgresql.conf
 echo "wal_level = replica" >> /etc/postgresql/15/main/postgresql.conf
 echo "wal_log_hints = on" >> /etc/postgresql/15/main/postgresql.conf
-echo "host replication repl_user 172.20.0.102/32 scram-sha-256" >> /etc/postgresql/15/main/pg_hba.conf
+echo "log_replication_commands = on" >> /etc/postgresql/15/main/postgresql.conf
+echo "host replication repl_user $DB_REPL_HOST/32 scram-sha-256" >> /etc/postgresql/15/main/pg_hba.conf
 echo "host all all all password" >> /etc/postgresql/15/main/pg_hba.conf
-#systemctl restart postgresql
+#systemctl start postgresql
+service postgresql start
+service sshd start
+echo "postgres:$DB_PASSWORD" | sudo chpasswd 
+locale-gen en_US.UTF-8
+su -c "cat /initdb/init.sql | psql" postgres
+trap "exit 0" SIGINT
+while true
+do
+    sleep 1
+done

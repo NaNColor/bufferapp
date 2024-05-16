@@ -9,27 +9,27 @@ import os
 
 load_dotenv()
 
-host = os.getenv('HOST')
-port = os.getenv('PORT')
-username = os.getenv('USERNAME')
-password = os.getenv('PASSWORD')
+host = os.getenv('RM_HOST')
+port = os.getenv('RM_PORT')
+username = os.getenv('RM_USER')
+password = os.getenv('RM_PASSWORD')
 
-db_ip = os.getenv('DBHOST')
-db_port = os.getenv('DBPORT')
-db_user = os.getenv('DBUSER')
-db_pass = os.getenv('DBPASS')
-db = os.getenv('DBNAME')
-db_host_user = os.getenv('DBHOSTUSER')
-db_host_pass = os.getenv('DBHOSTPASS')
-db_ssh_port = os.getenv('DBSSHPORT')
+db_ip = os.getenv('DB_HOST')
+db_port = os.getenv('DB_PORT')
+db_user = os.getenv('DB_USER')
+db_pass = os.getenv('DB_PASSWORD')
+db = os.getenv('DB_DATABASE')
+
+db_host_user = os.getenv('DB_USER')
+db_host_pass = os.getenv('DB_PASSWORD')
+db_ssh_port = os.getenv('DB_SSH_PORT')
 
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 
 buffer_data = None
 
-TOKEN = "5725657007:AAH-G1CdWkF-8WyTN4M_HhLddCeJK8NzLZU"
-
+TOKEN = os.getenv('TOKEN')
 
 # Подключаем логирование
 logging.basicConfig(

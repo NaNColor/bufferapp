@@ -1,0 +1,45 @@
+version: '3.1'
+
+services:
+    bot:
+#      build:
+#        context: ./bot
+#        dockerfile: Dockerfile
+#      container_name: bot_image
+      image: bot_image
+      env_file:
+        - .env
+      networks:
+        custom_network:
+          ipv4_address: 172.20.0.100
+    db:
+#      build:
+#        context: ./db
+#        dockerfile: Dockerfile
+#      container_name: db_image
+      image: db_image
+      environment:
+        - DB_REPL_HOST=${DB_REPL_HOST}
+        - DB_PASSWORD=${DB_PASSWORD}
+      networks:
+        custom_network:
+          ipv4_address: 172.20.0.101
+    db_repl:
+#      build:
+#        context: ./db_repl
+#        dockerfile: Dockerfile
+#      container_name: db_repl_image
+      image: db_repl_image
+      environment:
+        - DB_HOST=${DB_HOST}
+        - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
+      networks:
+        custom_network:
+          ipv4_address: 172.20.0.102
+
+networks:
+  custom_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet:  172.20.0.0/24
