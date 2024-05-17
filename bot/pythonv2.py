@@ -6,6 +6,7 @@ from psycopg2 import Error
 import paramiko
 from dotenv import load_dotenv
 import os
+import subprocess
 
 load_dotenv()
 
@@ -37,6 +38,10 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+def get_logs_from_bd_volume():
+    return subprocess.run("cat /repl_logs | grep repl", shell=True, check=True)
+
 
 def execute_sql_select(mystr):
     data = None
@@ -320,7 +325,8 @@ def get_services(update: Update, context):
     update.message.reply_text(result)
 
 def get_repl_logs(update: Update, context):
-    data = ssh_execute_get_logs_from_bd()
+    #data = ssh_execute_get_logs_from_bd()
+    data = get_logs_from_bd_volume()
     result = f"Logs from database:\n{data}"
     update.message.reply_text(result)
 

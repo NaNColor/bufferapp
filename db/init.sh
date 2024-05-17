@@ -1,5 +1,5 @@
 if [ -z "${VAR}" ]; then
-export -p VAR="SET"
+export VAR="SET"
 echo "listen_addresses = '*'" >> /etc/postgresql/15/main/postgresql.conf
 echo "archive_mode = on" >> /etc/postgresql/15/main/postgresql.conf
 echo "archive_command = 'cp %p /oracle/pg_data/archive/%f'" >> /etc/postgresql/15/main/postgresql.conf

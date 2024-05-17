@@ -1,8 +1,5 @@
-FROM debian
-RUN apt-get update && apt-get install -y postgresql-15 postgresql-contrib
-ENV DB_HOST="172.20.0.101"
-ENV DB_REPL_PASSWORD="Qq12345"
+#db repl
+FROM postgres:alpine
 EXPOSE 5432
-RUN mkdir -p /oracle/pg_data/archive && chown -R postgres:postgres /oracle
-COPY init.sh /initdb/init.sh
-CMD ["bash", "/initdb/init.sh"]
+RUN echo "listem_addresses = '*'" >> /etc/postgresql/*/main/postgresql.conf
+RUN rm -rf /var/lib/postgresql/data/*

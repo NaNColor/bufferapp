@@ -1,5 +1,5 @@
 if [ -z "${VAR}" ]; then
-export -p VAR="SET"
+export VAR="SET"
 service postgresql stop
 echo "listen_addresses = 'localhost, $DB_HOST'" >> /etc/postgresql/15/main/postgresql.conf
 #echo "host all all all password" >> /etc/postgresql/15/main/pg_hba.conf
