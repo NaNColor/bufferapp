@@ -1,3 +1,5 @@
+if [ -z "${VAR}" ]; then
+export -p VAR="SET"
 echo "listen_addresses = '*'" >> /etc/postgresql/15/main/postgresql.conf
 echo "archive_mode = on" >> /etc/postgresql/15/main/postgresql.conf
 echo "archive_command = 'cp %p /oracle/pg_data/archive/%f'" >> /etc/postgresql/15/main/postgresql.conf
@@ -13,6 +15,11 @@ service sshd start
 echo "postgres:$DB_PASSWORD" | sudo chpasswd 
 locale-gen en_US.UTF-8
 su -c "cat /initdb/init.sql | psql" postgres
+
+else
+echo "Settings are set"
+fi
+
 trap "exit 0" SIGINT
 while true
 do
