@@ -1,77 +1,59 @@
-version: '3'
-
+version: "3"
 services:
-  db:
-    image: db_image
-    networks:
-      custom_network:
-        ipv4_address: ${DB_HOST}
-    container_name: db
-    build:
-      context: ./db
-      dockerfile: Dockerfile
-      args:
-        DB_REPL_USER: ${DB_REPL_USER}
-        DB_REPL_PASSWORD: ${DB_REPL_PASSWORD}
-        DB_DATABASE: ${DB_DATABASE}
-        DB_PORT: ${DB_PORT}
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 172.20.0.0/24 md5"
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
-    env_file:
-      - .env
-    volumes:
-      - pg_logs:/var/log/postgresql
-
-  db_repl:
-    image: db_repl_image
-    networks:
-      custom_network:
-        ipv4_address: ${DB_REPL_HOST}
-    container_name: db_repl
-    build:
-      context: ./db_repl
-      dockerfile: Dockerfile
-      args:
-        DB_REPL_HOST: ${DB_REPL_HOST}
-        DB_REPL_PORT: ${DB_REPL_PORT}
-        DB_REPL_USER: ${DB_REPL_USER}
-        DB_REPL_PASSWORD: ${DB_REPL_PASSWORD}
-        DB_PORT: ${DB_PORT}
-        DB_HOST: ${DB_HOST}
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_REPLICATION_USER: ${DB_REPL_USER}
-      POSTGRES_REPLICATION_PASSWORD: ${DB_REPL_PASSWORD}
-    env_file:
-      - .env
-    depends_on:
-      - db
-
   bot:
     image: bot_image
+    build:
+        context: ./bot
+    environment:
+      - TOKEN=${TOKEN}
+      - RM_HOST=${RM_HOST}
+      - RM_PORT=${RM_PORT}
+      - RM_USER=${RM_USER}
+      - RM_PASSWORD=${RM_PASSWORD}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
     networks:
       custom_network:
         ipv4_address: 172.20.0.100
-    container_name: bot
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      - db
     volumes:
-      - pg_logs:/repl_logs
-
+      - pg_logs:/repl_logs/
+    container_name: "${BOT}"
+  db:
+    image: db_image
+    build: ./db
+    volumes:
+      - pg_logs:/var/log/
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - DB_REPL_USER=${DB_REPL_USER}
+      - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
+      - DB_REPL_HOST=${DB_REPL_HOST}.my_network
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+    container_name: "${DB_HOST}"
+    networks:
+      custom_network:
+        ipv4_address: 172.20.0.101
+  db_repl:
+    image: db_repl_image
+    build: ./db_repl
+    container_name: "${DB_REPL_HOST}"
+    environment:
+      - DB_HOST=${DB_HOST}.my_network
+      - DB_PORT=${DB_PORT}
+      - DB_REPL_HOST=${DB_REPL_HOST}
+      - DB_REPL_PORT=${DB_REPL_PORT}
+      - DB_REPL_USER=${DB_REPL_USER}
+      - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
+    networks:
+      custom_network:
+        ipv4_address: 172.20.0.102
 volumes:
+  pg_data:
   pg_logs:
   
 networks:

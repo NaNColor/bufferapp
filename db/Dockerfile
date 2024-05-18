@@ -1,36 +1,42 @@
 #db
-FROM postgres:15
-COPY init.sql /docker-entrypoint-initdb.d/init.sql
-RUN apt-get update && apt-get install -y sed gettext-base && rm -rf /var/lib/apt/lists/*
+FROM postgres:15.6
 
-ARG DB_REPL_USER
-ARG DB_REPL_PASSWORD
-ARG DB_DATABASE
-ARG DB_PORT
+# Update repos
+RUN apt-get update
+RUN apt-get install gettext-base
 
-RUN mkdir -p /oracle/pg_data/archive && chown postgres:postgres /oracle/pg_data/archive
+# Creating dirs for archives
+COPY ./init.sql /docker-entrypoint-initdb.d/init.sql.raw
+RUN mkdir -p /etc/postgresql/
+RUN mkdir -p /oracle/pg_data/archive/
+RUN chown postgres:postgres /oracle/pg_data/archive/
 
-RUN sed -i "s/\${DB_REPL_USER}/${DB_REPL_USER}/g" /docker-entrypoint-initdb.d/init.sql \
-    && sed -i "s/\${DB_REPL_PASSWORD}/${DB_REPL_PASSWORD}/g" /docker-entrypoint-initdb.d/init.sql \
-    && sed -i "s/\${DB_DATABASE}/${DB_DATABASE}/g" /docker-entrypoint-initdb.d/init.sql \
-    && sed -i "s/\${DB_PORT}/${DB_PORT}/g" /docker-entrypoint-initdb.d/init.sql
+# Making an entry point, where config files are changing
+ENTRYPOINT [ "bash", "-c", "\
+mkdir -p /var/log/postgresql/ \n\
+chown postgres:postgres /var/log/postgresql/ \n\
+envsubst < /docker-entrypoint-initdb.d/init.sql.raw > /docker-entrypoint-initdb.d/init.sql \n\
+cat <<EOF > /etc/postgresql/postgresql.conf \n\
+listen_addresses = '*' \n\
+port = ${DB_PORT} \n\
+log_destination = 'stderr' \n\
+logging_collector = on \n\
+log_directory = '/var/log/postgresql/' \n\
+log_filename = 'postgresql.log' \n\
+archive_mode = on \n\
+archive_command = 'cp %p /oracle/pg_data/archive/%f' \n\
+max_wal_senders = 10 \n\
+wal_level = replica \n\
+wal_log_hints = on \n\
+log_replication_commands = on \n\
+EOF\n\
+cat <<EOF > /etc/postgresql/pg_hba.conf \n\
+local all ${POSTGRES_USER} peer \n\
+host all all 0.0.0.0/0 password \n\
+host replication ${DB_REPL_USER} ${DB_REPL_HOST} trust \n\
+EOF\n\
+docker-entrypoint.sh $@"]
+# Run entry point script
 
-RUN echo "listen_addresses = '*'" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "port = ${DB_PORT}" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "archive_mode = on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "archive_command = 'cp %p /oracle/pg_data/archive/%f'" >> /var/lib/postgresql/data/postgresql.conf.sample \
-    && echo "log_destination = 'stderr'" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "logging_collector = on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "log_directory = '/var/log/postgresql/'" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "log_filename = 'postgresql.log'" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "max_wal_senders=10" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "wal_level=replica" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "wal_log_hints = on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "hot_standby=on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "max_replication_slots=10" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "hot_standby_feedback=on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "log_replication_commands=on" >> /usr/share/postgresql/postgresql.conf.sample
-
-RUN echo "host replication all 172.20.0./24 md5" >> /var/lib/postgresql/data/pg_hba.conf
-
-EXPOSE $DB_PORT
+# Run postgresql server wirh changed config files
+CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "hba_file=/etc/postgresql/pg_hba.conf" ]

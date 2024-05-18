@@ -1,23 +1,22 @@
 #db repl
-FROM postgres:15
+FROM postgres:15.6
 
-ARG DB_REPL_HOST
-ARG DB_REPL_PORT
-ARG DB_REPL_USER
-ARG DB_REPL_PASSWORD
-ARG DB_PORT
-ARG DB_HOST
+# Configure directories for postgres
+RUN mkdir -p /etc/postgresql/ 
+RUN chmod 750 /var/lib/postgresql/data
 
-RUN echo "listen_addresses = '*'" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "port = ${DB_REPL_PORT}" >> /usr/share/postgresql/postgresql.conf.sample
+# Making an entrypoing
+ENTRYPOINT [ "bash", "-c", "\
+cat <<EOF > /etc/postgresql/postgresql.conf \n\
+listen_addresses = 'localhost, ${DB_REPL_HOST}' \n\
+port = ${DB_REPL_PORT} \n\
+EOF\n\
+rm -rf /var/lib/postgresql/data/* \n\
+sleep 10 \n\
+echo ${DB_REPL_PASSWORD} | pg_basebackup -v -R \\\n\
+  -h ${DB_HOST} -p ${DB_PORT} -U ${DB_REPL_USER} -W -P \\\n\
+  -D /var/lib/postgresql/data \n\
+docker-entrypoint.sh $@"]
 
-RUN echo "#!/bin/bash" > /usr/local/bin/initrep.sh \
-    && echo "rm -rf /var/lib/postgresql/data/*" >> /usr/local/bin/initrep.sh \
-    && echo "PGPASSWORD=${DB_REPL_PASSWORD} pg_basebackup -h ${DB_HOST} -U ${DB_REPL_USER} -D /var/lib/postgresql/data --wal-method=stream --write-recovery-conf" >> /usr/local/bin/initrep.sh \
-    && echo "chown -R postgres:postgres /var/lib/postgresql/data" >> /usr/local/bin/initrep.sh \
-    && echo "chmod 700 /var/lib/postgresql/data" >> /usr/local/bin/initrep.sh \
-    && echo "su - postgres -c '/usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/data'" >> /usr/local/bin/initrep.sh
-
-RUN chmod +x /usr/local/bin/initrep.sh
-
-CMD ["/usr/local/bin/initrep.sh"]
+# Run CMD to set config files
+CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]

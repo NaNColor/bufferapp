@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def get_logs_from_bd_volume():
-    command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
+    command = "cat /repl_logs/postgresql/postgresql.log | grep repl | tail -n 10"
     return subprocess.run(command, shell=True, check=True)
 
 
