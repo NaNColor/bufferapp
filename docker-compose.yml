@@ -35,6 +35,7 @@ services:
       - DB_REPL_PORT=${DB_REPL_PORT}
       - DB_REPL_USER=${DB_REPL_USER}
       - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_REPL_PASSWORD}
     depends_on:
       - db    
     networks:
