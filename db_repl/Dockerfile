@@ -1,21 +1,23 @@
 #db repl
 FROM postgres:15
 
-ENV DB_REPL_PASSWORD="Qq12345"
-ENV DB_REPL_USER="repl_user"
-ENV DB_PORT="5432"
-ENV DB_REPL_PORT="5432"
-ENV DB_HOST="172.20.0.101"
-ENV POSTGRES_USER="postgres"
-ENV POSTGRES_PASSWORD="Qq12345"
+ARG DB_REPL_HOST
+ARG DB_REPL_PORT
+ARG DB_REPL_USER
+ARG DB_REPL_PASSWORD
+ARG DB_PORT
+ARG DB_HOST
 
-RUN chmod 750 /var/lib/postgresql/data
+RUN echo "listen_addresses = '*'" >> /usr/share/postgresql/postgresql.conf.sample \
+    && echo "port = ${DB_REPL_PORT}" >> /usr/share/postgresql/postgresql.conf.sample
 
-RUN echo "listen_addresses = 'localhost, ${DB_HOST}" > /etc/postgresql/postgresql.conf
-RUN echo "port = ${DB_REPL_PORT}" >> /etc/postgresql/postgresql.conf
+RUN echo "#!/bin/bash" > /usr/local/bin/initrep.sh \
+    && echo "rm -rf /var/lib/postgresql/data/*" >> /usr/local/bin/initrep.sh \
+    && echo "PGPASSWORD=${DB_REPL_PASSWORD} pg_basebackup -h ${DB_HOST} -U ${DB_REPL_USER} -D /var/lib/postgresql/data --wal-method=stream --write-recovery-conf" >> /usr/local/bin/initrep.sh \
+    && echo "chown -R postgres:postgres /var/lib/postgresql/data" >> /usr/local/bin/initrep.sh \
+    && echo "chmod 700 /var/lib/postgresql/data" >> /usr/local/bin/initrep.sh \
+    && echo "su - postgres -c '/usr/lib/postgresql/16/bin/postgres -D /var/lib/postgresql/data'" >> /usr/local/bin/initrep.sh
 
-RUN rm -rf /var/lib/postgresql/data/*
+RUN chmod +x /usr/local/bin/initrep.sh
 
-ENTRYPOINT [ "bash", "-c", "sleep 10 && echo ${DB_REPL_PASSWORD} | pg_basebackup -v -R -h ${DB_HOST} -p ${DB_PORT} -U ${DB_REPL_USER} -W -P -D /var/lib/postgresql/data && docker-entrypoint.sh $@"]
-
-CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+CMD ["/usr/local/bin/initrep.sh"]
