@@ -8,7 +8,7 @@ ARG DB_REPL_PASSWORD
 ARG DB_DATABASE
 ARG DB_PORT
 
-RUN mkdir -p /var/lib/postgresql/data/pg_archive/ && chown postgres:postgres /var/lib/postgresql/data/pg_archive/
+RUN mkdir -p /oracle/pg_data/archive && chown postgres:postgres /oracle/pg_data/archive
 
 RUN sed -i "s/\${DB_REPL_USER}/${DB_REPL_USER}/g" /docker-entrypoint-initdb.d/init.sql \
     && sed -i "s/\${DB_REPL_PASSWORD}/${DB_REPL_PASSWORD}/g" /docker-entrypoint-initdb.d/init.sql \
@@ -18,7 +18,7 @@ RUN sed -i "s/\${DB_REPL_USER}/${DB_REPL_USER}/g" /docker-entrypoint-initdb.d/in
 RUN echo "listen_addresses = '*'" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "port = ${DB_PORT}" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "archive_mode = on" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "archive_command = 'mkdir -p /var/lib/postgresql/data/pg_archive/ && cp %p /var/lib/postgresql/data/pg_archive/%f'" >> /var/lib/postgresql/data/postgresql.conf.sample \
+    && echo "archive_command = 'cp %p /oracle/pg_data/archive/%f'" >> /var/lib/postgresql/data/postgresql.conf.sample \
     && echo "log_destination = 'stderr'" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "logging_collector = on" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "log_directory = '/var/log/postgresql/'" >> /usr/share/postgresql/postgresql.conf.sample \

@@ -4,7 +4,7 @@ services:
   db:
     image: db_image
     networks:
-      network_bot:
+      custom_network:
         ipv4_address: ${DB_HOST}
     container_name: db
     build:
@@ -30,7 +30,7 @@ services:
   db_repl:
     image: db_repl_image
     networks:
-      network_bot:
+      custom_network:
         ipv4_address: ${DB_REPL_HOST}
     container_name: db_repl
     build:
@@ -57,7 +57,7 @@ services:
   bot:
     image: bot_image
     networks:
-      network_bot:
+      custom_network:
         ipv4_address: 172.20.0.100
     container_name: bot
     build:
@@ -75,7 +75,7 @@ volumes:
   pg_logs:
   
 networks:
-  network_bot:
+  custom_network:
     ipam:
       driver: default
       config:
