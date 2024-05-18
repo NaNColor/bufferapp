@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.1"
 services:
   bot:
     image: bot_image
@@ -10,73 +10,31 @@ services:
       custom_network:
         ipv4_address: 172.20.0.100
 
-  postgres:
+  db:
     image: db_image
-    command:
-      - "postgres"
-      - "-c"
-      - "max_connections=10"
-      - "-c"
-      - "shared_buffers=1GB"
-      - "-c"
-      - "effective_cache_size=1GB"
-      - "-c"
-      - "work_mem=16MB"
-      - "-c"
-      - "maintenance_work_mem=512MB"
-      - "-c"
-      - "random_page_cost=1.1"
-      - "-c"
-      - "listen_addresses='*'"
-      - "-c"
-      - "archive_mode=on"
-      - "-c"
-      - "archive_command='cp %p /oracle/pg_data/archive/%f'"
-      - "-c"
-      - "vmax_wal_senders=10"
-      - "-c"
-      - "wal_level=replica"
-      - "-c"
-      - "wal_log_hints=on"
-      - "-c"
-      - "log_replication_commands=on"
     environment:
-      PGUSER: ${DB_USER}
-      PGPASSWORD: ${DB_PASSWORD}
-      DB_REPL_HOST: ${DB_REPL_HOST}
-      DB_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - DB_REPL_USER=${DB_REPL_USER}
+      - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
+      - DB_REPL_HOST=${DB_REPL_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
     volumes:
       - repl_logs:/var/log/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U habrpguser -d habrdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
     networks:
       custom_network:
         ipv4_address: ${DB_HOST}
         
   db_repl:
     image: db_repl_image
-    command:
-      - "postgres"
-      - "-c"
-      - "listen_addresses='*'"
     environment:
       - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_REPL_HOST=${DB_REPL_HOST}
+      - DB_REPL_PORT=${DB_REPL_PORT}
+      - DB_REPL_USER=${DB_REPL_USER}
       - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
-      - PGPASSWORD: ${DB_REPL_PASSWORD}
-    user: postgres
-    command: |
-      bash -c "
-        until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=$DB_HOST --port 5432
-        do
-          echo 'Connect...' && sleep 1s
-        done
-        chmod 0700 /var/lib/postgresql/data
-        postgres"
     depends_on:
       - db    
     networks:
@@ -84,7 +42,7 @@ services:
         ipv4_address: ${DB_REPL_HOST}
 
 volumes:
-  data:
+  repl_logs:
 
 networks:
   custom_network:

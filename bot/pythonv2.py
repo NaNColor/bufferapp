@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def get_logs_from_bd_volume():
-    return subprocess.run("cat /repl_logs | grep repl", shell=True, check=True)
+    return subprocess.run("cat /repl_logs/*.log | grep repl", shell=True, check=True)
 
 
 def execute_sql_select(mystr):
