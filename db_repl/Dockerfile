@@ -6,6 +6,8 @@ ENV DB_REPL_USER="repl_user"
 ENV DB_PORT="5432"
 ENV DB_REPL_PORT="5432"
 ENV DB_HOST="172.20.0.101"
+ENV POSTGRES_USER="postgres"
+ENV POSTGRES_PASSWORD="Qq12345"
 
 RUN chmod 750 /var/lib/postgresql/data
 

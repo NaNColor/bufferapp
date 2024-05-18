@@ -33,6 +33,6 @@ RUN echo "local all ${POSTGRES_USER} peer" > /etc/postgresql/pg_hba.conf
 RUN echo "host all all 0.0.0.0/0 password" >> /etc/postgresql/pg_hba.conf 
 RUN echo "host replication ${DB_REPL_USER} ${DB_REPL_HOST} trust" >> /etc/postgresql/pg_hba.conf 
 
-ENTRYPOINT [ "bash", "-c", "envsubst < /docker-entrypoint-initdb.d/init.sql.raw > /docker-entrypoint-initdb.d/init.sql && docker-entrypoint.sh $@"]
+ENTRYPOINT [ "bash", "-c", "envsubst < /docker-entrypoint-initdb.d/init.sql > /docker-entrypoint-initdb.d/init.sql && docker-entrypoint.sh $@"]
 
 CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "hba_file=/etc/postgresql/pg_hba.conf" ]
