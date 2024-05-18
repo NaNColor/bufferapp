@@ -23,10 +23,11 @@ RUN echo "log_replication_commands = on" >> /etc/postgresql/postgresql.conf
 
 RUN echo "host all all 0.0.0.0/0 password" > /etc/postgresql/pg_hba.conf 
 
-ENTRYPOINT [ "bash", "-c", "envsubst < /docker-entrypoint-initdb.d/init.sql.raw > /docker-entrypoint-initdb.d/init.sql \n\
- echo "local all ${POSTGRES_USER} peer" > /etc/postgresql/pg_hba.conf \n\
- echo "host replication ${DB_REPL_USER} ${DB_REPL_HOST} trust" >> /etc/postgresql/pg_hba.conf \n\
- echo "port = ${DB_PORT}" >> /etc/postgresql/postgresql.conf \n\
- && docker-entrypoint.sh $@"]
+ENTRYPOINT [ "bash", "-c", "\
+envsubst < /docker-entrypoint-initdb.d/init.sql.raw > /docker-entrypoint-initdb.d/init.sql \n\
+echo 'local all ${POSTGRES_USER} peer' >> /etc/postgresql/pg_hba.conf \n\
+echo 'host replication ${DB_REPL_USER} ${DB_REPL_HOST} trust' >> /etc/postgresql/pg_hba.conf \n\
+echo 'port = ${DB_PORT}' >> /etc/postgresql/postgresql.conf \n\
+docker-entrypoint.sh $@"]
 
 CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "hba_file=/etc/postgresql/pg_hba.conf" ]
