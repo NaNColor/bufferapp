@@ -40,8 +40,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def get_logs_from_bd_volume():
-    command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
-    return subprocess.run(command, shell=True, check=True)
+    message = ""
+    try:
+        command = "cat /var/log/postgresql/postgresql.log | grep repl | tail -n 10"
+        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if res.returncode != 0 or res.stderr.decode() != "":
+            update.message.reply_text("Can not open log file!")
+        else:
+            logs = res.stdout.decode().strip('\n')
+            message = logs
+            update.message.reply_text(logs)
+    except Exception as e:
+        # Обработка исключений
+        message = f"Error: {str(e)}"
+
+    return message
 
 
 def execute_sql_select(mystr):

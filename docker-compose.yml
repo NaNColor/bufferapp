@@ -56,6 +56,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     command: |
       bash -c "
+      sleep 5s
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=${DB_HOST} --port=${DB_PORT} -U ${DB_REPL_USER}
       do
         echo 'Waiting for primary to connect...'
