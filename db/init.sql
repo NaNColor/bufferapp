@@ -1,10 +1,5 @@
 CREATE USER repl_user REPLICATION LOGIN PASSWORD 'Qq12345';
 
-DROP DATABASE IF EXISTS pt_db;
-CREATE DATABASE pt_db;
-
-\c pt_db;
-
 CREATE TABLE public.emails (
     id integer NOT NULL,
     email character varying(100) NOT NULL
