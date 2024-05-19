@@ -1,68 +1,62 @@
-version: "3"
+version: '3'
+
 services:
   bot:
-    image: bot_image
-    build:
-        context: ./bot
-    environment:
-      - TOKEN=${TOKEN}
-      - RM_HOST=${RM_HOST}
-      - RM_PORT=${RM_PORT}
-      - RM_USER=${RM_USER}
-      - RM_PASSWORD=${RM_PASSWORD}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_DATABASE=${DB_DATABASE}
-    networks:
-      custom_network:
-        ipv4_address: 172.20.0.100
-    volumes:
-      - pg_logs:/repl_logs/
     container_name: bot_image
-  db:
-    image: db_image
-    build: ./db
+    image: bot_image
+    build: bot/.
+    env_file: .env
     volumes:
-      - pg_logs:/var/log/
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - DB_REPL_USER=${DB_REPL_USER}
-      - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
-      - DB_REPL_HOST=${DB_REPL_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_DATABASE=${DB_DATABASE}
+      - pg_logs:/repl_logs
+
+  database:
     container_name: db_image
-    networks:
-      custom_network:
-        ipv4_address: ${DB_HOST}
-  db_repl:
-    image: db_repl_image
-    build: ./db_repl
-    container_name: db_repl_image
+    image: db_image
+    build: db/.
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_REPL_HOST=${DB_REPL_HOST}
-      - DB_REPL_PORT=${DB_REPL_PORT}
-      - DB_REPL_USER=${DB_REPL_USER}
-      - DB_REPL_PASSWORD=${DB_REPL_PASSWORD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pt_db
+      POSTGRES_PASSWORD: Qq12345
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - pg_logs:/tmp/  
+    ports:
+      - "5432:5432"
+    command: |
+      postgres
+      -c wal_level=replica
+      -c hot_standby=on
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c hot_standby_feedback=on
+      -c logging_collector=on
+      -c log_replication_commands=on
+      -c log_directory=/tmp/
+      -c log_filename=postgresql.log
+  db_repl_copy_image:
+    container_name: db_repl_image
+    image: db_repl_image
+    build: db_repl/.
+    ports:
+      - "5433:5432"
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: Qq12345
+      POSTGRES_PASSWORD: Qq12345
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=database --port=5432
+      do
+        echo 'Waiting for primary to connect...'
+        sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      su postgres
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
     depends_on:
-      - db
-    networks:
-      custom_network:
-        ipv4_address: ${DB_REPL_HOST}
+      - database
 volumes:
-  pg_data:
   pg_logs:
-  
-networks:
-  custom_network:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.20.0.0/24
