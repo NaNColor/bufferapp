@@ -10,14 +10,15 @@ services:
       - pg_logs:/repl_logs
     networks:
       network_bot:
-        ipv4_address: 172.20.0.1
+        ipv4_address: 172.20.0.11
+
   database:
     container_name: db_image
     image: db_image
     build: db/.
     networks:
       network_bot:
-        ipv4_address: 172.20.0.2
+        ipv4_address: 172.20.0.12
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_DATABASE}
@@ -66,7 +67,7 @@ services:
       - database
     networks:
       network_bot:
-        ipv4_address: 172.20.0.3
+        ipv4_address: 172.20.0.13
 volumes:
   pg_logs:
 
