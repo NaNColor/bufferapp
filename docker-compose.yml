@@ -18,7 +18,7 @@ services:
     build: db/.
     networks:
       network_bot:
-        ipv4_address: 172.20.0.12
+        ipv4_address: ${DB_HOST}
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_DATABASE}
@@ -52,7 +52,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     command: |
       bash -c "
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=database --port=5432
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=${DB_HOST} --port=5432
       do
         echo 'Waiting for primary to connect...'
         sleep 1s
@@ -66,7 +66,7 @@ services:
       - database
     networks:
       network_bot:
-        ipv4_address: 172.20.0.13
+        ipv4_address: ${DB_REPL_HOST}
 volumes:
   pg_logs:
 
