@@ -49,7 +49,6 @@ def get_logs_from_bd_volume():
         else:
             logs = res.stdout.decode().strip('\n')
             message = logs
-            update.message.reply_text(logs)
     except Exception as e:
         # Обработка исключений
         message = f"Error: {str(e)}"
