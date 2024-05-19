@@ -12,3 +12,4 @@ CREATE TABLE public.phones (
 
 INSERT INTO emails (email) VALUES ('email@test.test'), ('r.klimov@innopolis.university');
 INSERT INTO phones (phone) VALUES ('+7(911) 123-45-67'), ('89111234567');
+select pg_create_physical_replication_slot('replication_slot');
