@@ -23,7 +23,7 @@ db = os.getenv('DB_DATABASE')
 
 db_host_user = os.getenv('DB_USER')
 db_host_pass = os.getenv('DB_PASSWORD')
-db_ssh_port = os.getenv('DB_SSH_PORT')
+#db_ssh_port = os.getenv('DB_SSH_PORT')
 
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def get_logs_from_bd_volume():
-    command = "cat /repl_logs/postgresql/postgresql.log | grep repl | tail -n 10"
+    command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
     return subprocess.run(command, shell=True, check=True)
 
 
@@ -227,15 +227,15 @@ def verify_password (update: Update, context):
     update.message.reply_text(answer) # Отправляем сообщение пользователю
     return ConversationHandler.END # Завершаем работу обработчика диалога
 
-def ssh_execute_get_logs_from_bd ():
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=db_ip, username=db_host_user, password=db_host_pass, port=db_ssh_port)
-    stdin, stdout, stderr = client.exec_command("cat /var/log/postgresql/postgresql-15-main.log | grep 'repl' | tail -n 10")
-    data = stdout.read() + stderr.read()
-    client.close()
-    data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
-    return(data)
+#def ssh_execute_get_logs_from_bd ():
+#    client = paramiko.SSHClient()
+#    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#    client.connect(hostname=db_ip, username=db_host_user, password=db_host_pass, port=db_ssh_port)
+#    stdin, stdout, stderr = client.exec_command("cat /var/log/postgresql/postgresql-15-main.log | grep 'repl' | tail -n 10")
+#    data = stdout.read() + stderr.read()
+#    client.close()
+#    data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
+#    return(data)
 
 def ssh_execute_command (command):
     client = paramiko.SSHClient()
