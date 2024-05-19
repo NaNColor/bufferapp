@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 def get_logs_from_bd_volume():
     message = ""
     try:
-        command = "cat /var/log/postgresql/postgresql.log | grep repl | tail -n 10"
+        command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
         res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if res.returncode != 0 or res.stderr.decode() != "":
             message = "Can not open log file!"
