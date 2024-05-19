@@ -45,7 +45,7 @@ def get_logs_from_bd_volume():
         command = "cat /var/log/postgresql/postgresql.log | grep repl | tail -n 10"
         res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if res.returncode != 0 or res.stderr.decode() != "":
-            update.message.reply_text("Can not open log file!")
+            message = "Can not open log file!"
         else:
             logs = res.stdout.decode().strip('\n')
             message = logs
