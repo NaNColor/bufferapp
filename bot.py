@@ -39,21 +39,21 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-def get_logs_from_bd_volume():
-    message = ""
-    try:
-        command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
-        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if res.returncode != 0 or res.stderr.decode() != "":
-            message = "Can not open log file!"
-        else:
-            logs = res.stdout.decode().strip('\n')
-            message = logs
-    except Exception as e:
-        # Обработка исключений
-        message = f"Error: {str(e)}"
-
-    return message
+#def get_logs_from_bd_volume():
+#    message = ""
+#    try:
+#        command = "cat /repl_logs/postgresql.log | grep repl | tail -n 10"
+#        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#        if res.returncode != 0 or res.stderr.decode() != "":
+#            message = "Can not open log file!"
+#        else:
+#            logs = res.stdout.decode().strip('\n')
+#            message = logs
+#    except Exception as e:
+#        # Обработка исключений
+#        message = f"Error: {str(e)}"
+#
+#    return message
 
 
 def execute_sql_select(mystr):
@@ -239,15 +239,15 @@ def verify_password (update: Update, context):
     update.message.reply_text(answer) # Отправляем сообщение пользователю
     return ConversationHandler.END # Завершаем работу обработчика диалога
 
-#def ssh_execute_get_logs_from_bd ():
-#    client = paramiko.SSHClient()
-#    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#    client.connect(hostname=db_ip, username=db_host_user, password=db_host_pass, port=db_ssh_port)
-#    stdin, stdout, stderr = client.exec_command("cat /var/log/postgresql/postgresql-15-main.log | grep 'repl' | tail -n 10")
-#    data = stdout.read() + stderr.read()
-#    client.close()
-#    data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
-#    return(data)
+def ssh_execute_get_logs_from_bd ():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(hostname=db_ip, username=db_host_user, password=db_host_pass, port=db_ssh_port)
+    stdin, stdout, stderr = client.exec_command("cat /var/log/postgresql/postgresql-15-main.log | grep 'repl' | tail -n 10")
+    data = stdout.read() + stderr.read()
+    client.close()
+    data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
+    return(data)
 
 def ssh_execute_command (command):
     client = paramiko.SSHClient()
@@ -321,8 +321,14 @@ def get_ss(update: Update, context):
 def get_apt_list(update: Update, context):
     user_input = re.escape(update.message.text.replace(" ", ""))
     if user_input == "all":
-        data = ssh_execute_command("dpkg --get-selections | grep -v deinstall | head -n 20")
-        result = f"Information about packets:\n{data}"
+        try:
+            data = ssh_execute_command("dpkg --get-selections | grep -v deinstall | head -n 200").split("\n")
+            result = "Information about packets:\n"
+            for line in data:
+                result += line.split()[0] + ", "
+            result = result[:-2]
+        except Exception as e:
+            result = e
     else:
         data = ssh_execute_command(f"dpkg --get-selections | grep -w {user_input}")
         result = f"Information about the packet:\n{data}"
@@ -338,8 +344,8 @@ def get_services(update: Update, context):
     update.message.reply_text(result)
 
 def get_repl_logs(update: Update, context):
-    #data = ssh_execute_get_logs_from_bd()
-    data = get_logs_from_bd_volume()
+    data = ssh_execute_get_logs_from_bd()
+    #data = get_logs_from_bd_volume()
     result = f"Logs from database:\n{data}"
     update.message.reply_text(result)
 
